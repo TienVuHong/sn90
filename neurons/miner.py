@@ -25,6 +25,9 @@ import traceback
 import requests
 import json
 import re
+from openai import OpenAI
+from neurons import Config
+import json
 from typing import List, Dict, Any, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor
 
@@ -50,7 +53,7 @@ class BrainMiner:
         self.config = config
         
         # Set up logging
-        self.logger = bittensor.logging.get_logger(config.logging.debug)
+        # self.logger = bittensor.logging.get_logger(config.logging.debug)
         
         # Build subtensor connection
         self.subtensor = bittensor.subtensor(
@@ -79,17 +82,17 @@ class BrainMiner:
             axon=self.axon
         )
         
-        # Add verification request handler
-        self.axon.attach(
-            forward_fn=self.verify_statement,
-            blacklist_fn=self.blacklist_verify_statement,
-        )
+        # # Add verification request handler
+        # self.axon.attach(
+        #     forward_fn=self.verify_statement,
+        #     blacklist_fn=self.blacklist_verify_statement,
+        # )
         
-        # Add validation request handler
-        self.axon.attach(
-            forward_fn=self.validate_verification,
-            blacklist_fn=self.blacklist_validate_verification,
-        )
+        # # Add validation request handler
+        # self.axon.attach(
+        #     forward_fn=self.validate_verification,
+        #     blacklist_fn=self.blacklist_validate_verification,
+        # )
         
         # Set up search tools and resources
         self.setup_verification_tools()
@@ -97,7 +100,7 @@ class BrainMiner:
         # Version of the miner
         self.version = "0.1.0"
         
-        self.logger.info("Brain miner initialized")
+        print("Brain miner initialized")
         
     def setup_verification_tools(self):
         """Set up tools and resources for verification."""
@@ -105,7 +108,7 @@ class BrainMiner:
         # that your miner will use to verify statements
         
         # Example: Set up a web search client
-        self.search_client = None  # Replace with actual implementation
+        self.search = OpenAI(api_key=Config.API_KEY, base_url=Config.BASE_URL)
         
         # Example: Set up a database client for historical data
         self.db_client = None  # Replace with actual implementation
@@ -128,14 +131,14 @@ class BrainMiner:
         try:
             # Extract the statement
             statement = synapse.statement
-            self.logger.info(f"Verifying statement: {statement.text}")
+            print(f"Verifying statement: {statement.text}")
             
             # Perform verification logic
             # In a real implementation, this would use various tools and techniques
             # to determine the truth value of the statement
             
             # Example verification logic (placeholder)
-            is_true, confidence, evidence, explanation = self.perform_verification(statement)
+            is_true, confidence, evidence, explanation, methodology = self.perform_verification(statement)
             
             # Create the prediction result
             result = PredictionResult(
@@ -144,7 +147,7 @@ class BrainMiner:
                 confidence=confidence,
                 explanation=explanation,
                 evidence=evidence,
-                methodology="Web search, database lookup, and logical reasoning"
+                methodology=methodology
             )
             
             # Calculate computation time
@@ -159,8 +162,8 @@ class BrainMiner:
             
         except Exception as e:
             # Log the error
-            self.logger.error(f"Error in verification: {str(e)}")
-            self.logger.error(traceback.format_exc())
+            print(f"Error in verification: {str(e)}")
+            print(traceback.format_exc())
             
             # Return a default response
             return VerificationResponse(
@@ -194,12 +197,37 @@ class BrainMiner:
         # In a real miner, this would use various tools and techniques
         
         # Example: Search for evidence
-        evidence = self.search_for_evidence(statement.text)
+        # evidence = self.search_for_evidence(statement.text)
         
-        # Example: Analyze the evidence
-        is_true, confidence, explanation = self.analyze_evidence(statement.text, evidence)
+        # # Example: Analyze the evidence
+        # is_true, confidence, explanation = self.analyze_evidence(statement.text, evidence)
         
-        return is_true, confidence, evidence, explanation
+        # return is_true, confidence, evidence, explanation
+
+        response = self.client.chat.completions.create(
+            model=Config.MODEL,
+            messages=[
+                {"role": "system", "content": Config.SYSTEM_PROMPT},
+                {"role": "user", "content": Config.VERIFY_PROMPT + statement},
+            ],
+            stream=False
+        )
+
+        print(response.choices[0].message.content)
+        raw_content = response.choices[0].message.content.strip()
+        if raw_content.startswith("```json"):
+            raw_content = raw_content.removeprefix("```json").strip()
+        if raw_content.endswith("```"):
+            raw_content = raw_content.removesuffix("```").strip()
+        res = json.loads(raw_content)
+
+        is_true = res['is_true']
+        confidence = res['confidence']
+        evidence = res['evidence']
+        explanation = res['explanation']
+        methodology = res['methodology']
+        return is_true, confidence, evidence, explanation, methodology
+
     
     def search_for_evidence(self, statement_text: str) -> List[Dict[str, Any]]:
         """
@@ -266,10 +294,10 @@ class BrainMiner:
             statement = synapse.statement
             miner_result = synapse.miner_result
             
-            self.logger.info(f"Validating verification for statement: {statement.text}")
+            print(f"Validating verification for statement: {statement.text}")
             
             # Perform our own verification
-            is_true, confidence, evidence, explanation = self.perform_verification(statement)
+            is_true, confidence, evidence, explanation, methodology = self.perform_verification(statement)
             
             # Compare our result with the miner's result
             is_valid = abs(confidence - miner_result.confidence) < 0.3 and is_true == miner_result.is_true
@@ -283,7 +311,7 @@ class BrainMiner:
                     confidence=confidence,
                     explanation=explanation,
                     evidence=evidence,
-                    methodology="Independent verification"
+                    methodology=methodology
                 )
             
             # Create and return the response
@@ -298,8 +326,8 @@ class BrainMiner:
             
         except Exception as e:
             # Log the error
-            self.logger.error(f"Error in validation: {str(e)}")
-            self.logger.error(traceback.format_exc())
+            print(f"Error in validation: {str(e)}")
+            print(traceback.format_exc())
             
             # Return a default response
             return ValidationResponse(
@@ -309,19 +337,19 @@ class BrainMiner:
                 alternative_result=None
             )
     
-    def blacklist_verify_statement(self, synapse: VerificationRequest) -> bool:
-        """Determines whether a verification request should be blacklisted."""
-        # Example blacklist logic
-        if synapse.statement is None or synapse.statement.text == "":
-            return True
-        return False
+    # def blacklist_verify_statement(self, synapse: VerificationRequest) -> bool:
+    #     """Determines whether a verification request should be blacklisted."""
+    #     # Example blacklist logic
+    #     if synapse.statement is None or synapse.statement.text == "":
+    #         return True
+    #     return False
     
-    def blacklist_validate_verification(self, synapse: ValidationRequest) -> bool:
-        """Determines whether a validation request should be blacklisted."""
-        # Example blacklist logic
-        if synapse.statement is None or synapse.miner_result is None:
-            return True
-        return False
+    # def blacklist_validate_verification(self, synapse: ValidationRequest) -> bool:
+    #     """Determines whether a validation request should be blacklisted."""
+    #     # Example blacklist logic
+    #     if synapse.statement is None or synapse.miner_result is None:
+    #         return True
+    #     return False
     
     @staticmethod
     def get_config() -> 'bittensor.config':
@@ -367,18 +395,18 @@ def main():
             
             # Log the current block
             current_block = miner.subtensor.get_current_block()
-            miner.logger.info(f"Current block: {current_block}")
+            print(f"Current block: {current_block}")
             
             # Sleep for a bit
             time.sleep(60)
             
         except KeyboardInterrupt:
-            miner.logger.info("Keyboard interrupt detected, exiting")
+            print("Keyboard interrupt detected, exiting")
             break
             
         except Exception as e:
-            miner.logger.error(f"Error in main loop: {str(e)}")
-            miner.logger.error(traceback.format_exc())
+            print(f"Error in main loop: {str(e)}")
+            print(traceback.format_exc())
             time.sleep(60)
 
 if __name__ == "__main__":
