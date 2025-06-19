@@ -1,4 +1,4 @@
-API_KEY = "sk-8d9250a3f7254978a835ac3fba444b11"
+API_KEY = "sk-d9250a3f7254978a835ac3fba444b11"
 MODEL = "deepseek-chat"
 BASE_URL = "https://api.deepseek.com"
 
