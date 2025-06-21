@@ -41,6 +41,20 @@ from brain.protocol import (
     ValidationResponse
 )
 
+def blacklist_verify_statement(synapse: VerificationRequest) -> Tuple[bool, str]:
+    """Determines whether a verification request should be blacklisted."""
+    # Example blacklist logic
+    if synapse.statement is None or synapse.statement.text == "":
+        return (True,synapse.statement.text)
+    return (False, "")
+
+def blacklist_validate_verification(synapse: ValidationRequest) -> Tuple[bool, str]:
+    """Determines whether a validation request should be blacklisted."""
+    # Example blacklist logic
+    if synapse.statement is None or synapse.statement.text == "":
+        return (True,synapse.statement.text)
+    return (False, "")
+
 class BrainMiner:
     """
     Implementation of the Brain subnet miner that verifies prediction market statements.
@@ -86,13 +100,13 @@ class BrainMiner:
         # # Add verification request handler
         self.axon.attach(
             forward_fn=self.verify_statement,
-            blacklist_fn=self.blacklist_verify_statement,
+            blacklist_fn=blacklist_verify_statement,
         )
         
         # # Add validation request handler
         self.axon.attach(
             forward_fn=self.validate_verification,
-            blacklist_fn=self.blacklist_validate_verification,
+            blacklist_fn=blacklist_validate_verification,
         )
         
         # Set up search tools and resources
@@ -337,21 +351,7 @@ class BrainMiner:
                 explanation=f"Error during validation: {str(e)}",
                 alternative_result=None
             )
-    
-    def blacklist_verify_statement(self, synapse: VerificationRequest) -> bool:
-        """Determines whether a verification request should be blacklisted."""
-        # Example blacklist logic
-        if synapse.statement is None or synapse.statement.text == "":
-            return True
-        return False
-    
-    def blacklist_validate_verification(self, synapse: ValidationRequest) -> bool:
-        """Determines whether a validation request should be blacklisted."""
-        # Example blacklist logic
-        if synapse.statement is None or synapse.miner_result is None:
-            return True
-        return False
-    
+
     @staticmethod
     def get_config() -> 'bittensor.config':
         """
