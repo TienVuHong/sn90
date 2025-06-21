@@ -26,7 +26,8 @@ import requests
 import json
 import re
 from openai import OpenAI
-from neurons import Config
+#from neurons import Config
+import Config
 import json
 from typing import List, Dict, Any, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor
