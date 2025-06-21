@@ -115,7 +115,7 @@ class BrainMiner:
         # Version of the miner
         self.version = "0.1.0"
         
-        print("Brain miner initialized")
+        bittensor.logging.debug("Brain miner initialized")
         
     def setup_verification_tools(self):
         """Set up tools and resources for verification."""
@@ -146,7 +146,7 @@ class BrainMiner:
         try:
             # Extract the statement
             statement = synapse.statement
-            print(f"Verifying statement: {statement.text}")
+            bittensor.logging.debug(f"Verifying statement: {statement.text}")
             
             # Perform verification logic
             # In a real implementation, this would use various tools and techniques
@@ -177,8 +177,8 @@ class BrainMiner:
             
         except Exception as e:
             # Log the error
-            print(f"Error in verification: {str(e)}")
-            print(traceback.format_exc())
+            bittensor.logging.error(f"Error in verification: {str(e)}")
+            bittensor.logging.error(traceback.format_exc())
             
             # Return a default response
             return VerificationResponse(
@@ -228,7 +228,7 @@ class BrainMiner:
             stream=False
         )
 
-        print(response.choices[0].message.content)
+        bittensor.logging.debug(response.choices[0].message.content)
         raw_content = response.choices[0].message.content.strip()
         if raw_content.startswith("```json"):
             raw_content = raw_content.removeprefix("```json").strip()
@@ -311,7 +311,7 @@ class BrainMiner:
             statement = synapse.statement
             miner_result = synapse.miner_result
             
-            print(f"Validating verification for statement: {statement.text}")
+            bittensor.logging.debug(f"Validating verification for statement: {statement.text}")
             
             # Perform our own verification
             is_true, confidence, evidence, explanation, methodology = self.perform_verification(statement)
@@ -343,8 +343,8 @@ class BrainMiner:
             
         except Exception as e:
             # Log the error
-            print(f"Error in validation: {str(e)}")
-            print(traceback.format_exc())
+            bittensor.logging.error(f"Error in validation: {str(e)}")
+            bittensor.logging.error(traceback.format_exc())
             
             # Return a default response
             return ValidationResponse(
@@ -398,18 +398,18 @@ def main():
             
             # Log the current block
             current_block = miner.subtensor.get_current_block()
-            print(f"Current block: {current_block}")
+            bittensor.logging.debug(f"Current block: {current_block}")
             
             # Sleep for a bit
             time.sleep(60)
             
         except KeyboardInterrupt:
-            print("Keyboard interrupt detected, exiting")
+            bittensor.logging.warning("Keyboard interrupt detected, exiting")
             break
             
         except Exception as e:
-            print(f"Error in main loop: {str(e)}")
-            print(traceback.format_exc())
+            bittensor.logging.error(f"Error in main loop: {str(e)}")
+            bittensor.logging.error(traceback.format_exc())
             time.sleep(60)
 
 if __name__ == "__main__":
