@@ -10,13 +10,11 @@ VERIFY_PROMPT = '''
 Your main task is to verify the provided statements by determining if they are true or false with confidence intervals
 
 ### REQUIREMENT
-Return the output in json format
-Example:
+1. Return the output in json format
+2. Example:
 {
     "is_true": True,
     "confidence": 0.8,
-    "explanation": "The reason is ...",
-    "methodology": "Web search, logicl reasoning",
     "evidence": [
         {
             "source": "example.com",
@@ -34,11 +32,13 @@ Example:
         }
     ]
 }
-    - is_true: Boolean indicating if the statement is true.
-    - confidence: Float between 0 and 1 indicating confidence.
-    - evidence: List of evidence supporting the determination.
-    - explanation: String explaining the reasoning.
-    - methodology: String explain the used methodology such as: "Web search, database lookup, and logical reasoning"
+3. Explain for output field:
+- is_true: Boolean indicating if the statement is true.
+- confidence: Float between 0 and 1 indicating confidence.
+- evidence: List of evidence supporting the determination (must contain at least 5 evidences)
+
+4. Importance
+- Output must has at least 5 evidences
 
 ### STATEMENT
 '''

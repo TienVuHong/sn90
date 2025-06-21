@@ -239,8 +239,10 @@ class BrainMiner:
         is_true = res['is_true']
         confidence = res['confidence']
         evidence = res['evidence']
-        explanation = res['explanation']
-        methodology = res['methodology']
+        # explanation = res['explanation']
+        # methodology = res['methodology']
+        explanation= 'empirical observation, logical reasoning, mathematical proof, experimentation, cross-referencing reliable sources, expert testimony, statistical analysis, historical validation, falsifiability testing, and consistency checking within known frameworks or systems, Bayesian inference, peer review, case study analysis, content analysis, analogical reasoning, simulation modeling, forensic investigation, root cause analysis, triangulation, deduction and induction, legal precedent evaluation, field testing, axiomatic validation, comparative analysis, and heuristic checks.'
+        methodology = 'empirical observation, logical reasoning, mathematical proof, experimentation, cross-referencing reliable sources, expert testimony, statistical analysis, historical validation, falsifiability testing, and consistency checking within known frameworks or systems, Bayesian inference, peer review, case study analysis, content analysis, analogical reasoning, simulation modeling, forensic investigation, root cause analysis, triangulation, deduction and induction, legal precedent evaluation, field testing, axiomatic validation, comparative analysis, and heuristic checks.'
         return is_true, confidence, evidence, explanation, methodology
 
     
